@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+interface IESGProvider {
+    function getESGScore(address _entity) external view returns (uint256);
+}
+
+contract ESGOracle {
+    address public owner;
+    mapping(string => address) public esgProviders;
+
+    event ESGProviderUpdated(string providerName, address providerAddress);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can update ESG providers");
+        _;
+    }
+
+    // Allow owner to add/update ESG providers
+    function addESGProvider(string memory _providerName, address _providerAddress) public onlyOwner {
+        esgProviders[_providerName] = _providerAddress;
+        emit ESGProviderUpdated(_providerName, _providerAddress);
+    }
+
+    // Fetch ESG score from a specific provider
+    function getESGScore(string memory _providerName, address _entity) public view returns (uint256) {
+        address provider = esgProviders[_providerName];
+        require(provider != address(0), "Provider not registered");
+        IESGProvider esgProvider = IESGProvider(provider);
+        return esgProvider.getESGScore(_entity);
+    }
+}
