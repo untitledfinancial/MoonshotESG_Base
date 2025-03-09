@@ -1,2 +1,2 @@
 # MoonshotESG_Base
-Stable project utilizing ESG data on Base
+A stables project utilizing ESG data on Base. 
