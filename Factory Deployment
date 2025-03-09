@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: MIT
+// IP Attribution: Victoria Lee Case
+
+pragma solidity ^0.8.20;
+
+import "./DovePaxBranch.sol";
+
+contract DovePaxBranchFactory {
+    address public owner;
+    address[] public deployedStablecoins;
+
+    event StablecoinDeployed(address indexed stablecoinAddress);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function deployStablecoin(
+        address _oracleAddress,
+        address _protocolFeeAddress,
+        address _licensingFeeAddress
+    ) external returns (address) {
+        require(msg.sender == owner, "Only owner can deploy");
+
+        DovePaxBranch newStablecoin = new DovePaxBranch(
+            _oracleAddress,
+            _protocolFeeAddress,
+            _licensingFeeAddress
+        );
+
+        deployedStablecoins.push(address(newStablecoin));
+
+        emit StablecoinDeployed(address(newStablecoin));
+        return address(newStablecoin);
+    }
+
+    function getDeployedStablecoins() external view returns (address[] memory) {
+        return deployedStablecoins;
+    }
+}
