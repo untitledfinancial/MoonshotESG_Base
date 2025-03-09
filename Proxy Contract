@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: MIT
+// IP Attribution: Victoria Lee Case
+
+pragma solidity ^0.8.20;
+
+contract DovePaxBranchProxy {
+    address public implementation; // The actual stablecoin contract
+    address public admin; // Your wallet address
+
+    event Upgraded(address indexed newImplementation);
+
+    constructor(address _implementation) {
+        implementation = _implementation;
+        admin = msg.sender;
+    }
+
+    function upgradeImplementation(address _newImplementation) external {
+        require(msg.sender == admin, "Only admin can upgrade");
+        implementation = _newImplementation;
+        emit Upgraded(_newImplementation);
+    }
+
+    fallback() external payable {
+        _delegate(implementation);
+    }
+
+    receive() external payable {
+        _delegate(implementation);
+    }
+
+    function _delegate(address _impl) internal {
+        assembly {
+            let ptr := mload(0x40)
+            calldatacopy(ptr, 0, calldatasize())
+
+            let result := delegatecall(gas(), _impl, ptr, calldatasize(), 0, 0)
+
+            returndatacopy(ptr, 0, returndatasize())
+
+            switch result
+            case 0 { revert(ptr, returndatasize()) }
+            default { return(ptr, returndatasize()) }
+        }
+    }
+}
